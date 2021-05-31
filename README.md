@@ -19,10 +19,9 @@ To access the Jupyter Notebook that I created, run in the root folder of the `ju
 
 ```{sh}
   .
-  |-reports
+  |-report
   |  |- markdown
   |  |  |- Sunspots.md
-  |-data
   |- Sunspots.ipynb
   |- requirements.txt
 ```
