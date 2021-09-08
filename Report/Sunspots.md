@@ -1,8 +1,9 @@
 # Analysing the Monthly Sunspot Dataset from Machine Learning Mastery
 
-his notebook is used to analyze the 'Shampoo Sales Dataset' from the Machine Learning Mastery. The dataset is available [here](https://machinelearningmastery.com/time-series-datasets-for-machine-learning/).
+This notebook is used to analyze the 'Monthly Sunspot Dataset' from the Machine Learning Mastery. The dataset is available [here](https://machinelearningmastery.com/time-series-datasets-for-machine-learning/). This project is part of my Final Project for the Awari's Data Science course.
 
-This dataset describes the monthly number of sales of shampoo over a 3 year period. The units are a sales count and there are 36 observations. The original dataset is credited to Makridakis, Wheelwright and Hyndman (1998).
+This dataset describes a monthly count of the number of observed sunspots for just over 230 years (1749-1983).
+The units are a count and there are 2,820 observations. The source of the dataset is credited to Andrews & Herzberg (1985).
 
 The notebook is dividede as follows:
     
@@ -215,13 +216,13 @@ print(df_date.columns)
 
 "The first thing to do in any data analysis task is to plot the data because they enable many features of the data to be visualised, including patterns, unusual observations, changes over time, and relationships between variables" [(HYNDMAN; ATHANASOPOULOS, 2018)](https://otexts.com/fpp3/).
 
-Therefore, we will start our analysis making some graphics that are useful for understanding timeseries. The obvious graph to start is a time plot.
+Therefore, we will start our analysis making some graphics that are useful for understanding time series. The obvious graph to start is a time plot.
 
 The time plot shows that there is considerable seasonal variation (fluctuations with a fixed frequency). Besides, there does not seems to be a clear trend (long-term increase or decrease in the data). The time series period between maximums and minimus varies from 9 to 13 years, as can be seen in the second time plot. But we know that "the solar cycle or solar magnetic activity cycle is a nearly periodic 11-year change in the Sun's activity" [(WIKIPEDIA)](https://en.wikipedia.org/wiki/Solar_cycle).
 
-The seasonal plot and seasonal polar plot confirm that there is seasonality in the data considering the same year, in 11 year peridos, with few exceptions. Besides, these plots give some indications that there may be a trend in the data because the values seems to be increasing from one decade to another.
+The seasonal plot and seasonal polar plot confirm that there is seasonality in the data considering the same year, in 11 year periods, with few exceptions. In addition, these charts give some indication that there may be a trend in the data as values appear to be increasing from decade to decade. 
 
-Besides, we also need to look for autocorrelation in the dataset. From the autocorrelation function (ACF) plot, we see that our data clearly have a seasonality, as it is presenting a nonsymmetrical sine wave pattern [(HOLMES; SCHEURELL; WARD, 2021)](https://nwfsc-timeseries.github.io/atsa-labs/). This is also confirmed by the partial autocorrelation function (PACF). Therefore, our data probably have a seasonality and is not stationary.
+We also need to look for autocorrelation in the dataset. From the autocorrelation function (ACF) plot, we see that our data clearly have a seasonality, as it is presenting a nonsymmetrical sine wave pattern [(HOLMES; SCHEURELL; WARD, 2021)](https://nwfsc-timeseries.github.io/atsa-labs/). This is also confirmed by the partial autocorrelation function (PACF). Therefore, our data probably have a seasonality and is not stationary.
 
 
 
@@ -669,9 +670,9 @@ plt.show()
 
 ## 2. Data modelling
 
-### Data analysis
+### Data analysis and preparation
 
-The results of the exploratory analysis indicated that the time series is not stationary, i.e., its properties depend on the time at which the series is observed. Before continuing, let's check this using two tests: 
+The results of the exploratory analysis indicated that the time series is not stationary, i.e., its properties depend on the time at which the series is observed. Before continuing, let's verify this using some tests: 
 
 1. Augmented Dickey Fuller test - ADH Test
 2. Kwiatkowski-Phillips-Schmidt-Shin test – KPSS test
@@ -684,47 +685,27 @@ The KPSS test, on the other hand, is used to test for trend stationarity. The nu
 
 The DFGLS test is an improved version of the ADF which uses a GLS-detrending regression before running an ADF regression with no additional deterministic terms. The null hypothesis is the same as the ADF test.
 
-The PHP test is similar to the ADF except that the regression run does not include lagged values of the first differences. Instead, the PP test fixed the t-statistic using a long run variance estimation, implemented using a Newey-West covariance estimator. The null hypothesis is that the time series possesses a unit root and is non-stationary. So, if the p-value is less than the significance level (0.05), the series is stationary.
+The PHP test is similar to the ADF test, except that the regression run does not include lagged values of the first differences. Instead, the PHP test fixes the t-statistic using a long run variance estimation, implemented using a Newey-West covariance estimator. The null hypothesis is that the time series possesses a unit root and is non-stationary. So, if the p-value is less than the significance level (0.05), the series is stationary.
 
-Using the tests with the functions default lags values, all the results indicate that the time series is stationary, despite the obvious seasonal trend identified in the exploratory analysis. However, setting the lags for higher values, more compatible with the PACF plot, we verify that our data fail in some of the tests, **confirming that it is not stationary**. 
+Using the tests with the functions default lag values, all the results indicate that the time series is stationary, despite the obvious seasonal trend identified in the exploratory analysis. However, setting the lags for higher values, more compatible with the PACF plot, we verify that our data fail in some of the tests, **confirming that it is not stationary**. 
 
-Therefore, we need to **extract the seasonal component** of our data before trying to create a forecasting model. The first step is to decompose the data in its components, S (seasonal component), T (trend-cycle component), and R (remainder component) (HYNDMAN; ATHANASOPOULOS, 2018; HOLMES; SCHEURELL; WARD, 2021). There are many different methods for decomposing data. There are the so called 'classical decomposition methods': the additive and multiplicative methods. Besides, there are more recent methods, such as X11, Seasonal Extraction in ARIMA Time Series (SEATS), and Seasonal and Trend decomposition using Loess (STS). The [statsmodels library](https://www.statsmodels.org/stable/index.html) provides many of these methods. Therfore, we can easily try more than one of them.
+Therefore, we need to **extract the seasonal component** of our data before trying to create a forecasting model. The first step is to decompose the data in its components, S (seasonal component), T (trend-cycle component), and R (remainder component) (HYNDMAN; ATHANASOPOULOS, 2018; HOLMES; SCHEURELL; WARD, 2021). There are many different methods for decomposing data. There are the so called 'classical decomposition methods': the additive and multiplicative methods. Besides, there are more recent methods, such as X11, Seasonal Extraction in ARIMA Time Series (SEATS), and Seasonal and Trend decomposition using Loess (STS). The [statsmodels library](https://www.statsmodels.org/stable/index.html) provides many of these methods. Therefore, we can easily try more than one of them.
 
-Both the classical decomposition methods confirm that the **data have a strong seasonal component**. Moreover, **there is also a weak seasonal component** that was not detected in the exploratory analysis. However, these are 'naive' decompositions, thus we should use a more versatile and robust method. 
+The classical decomposition methods confirm that the **data have a strong seasonal component**. Moreover, **there is also a weak trend-cycle component** that was not detected in the exploratory analysis. However, these are 'naive' decompositions, thus we should use a more versatile and robust method. 
 
-Thus, we can use the STL method to check our previous results. We use two kinds of STL methods. In the first case, we activate the 'robust' feature, which uses a data-dependent weighting function that re-weights data when estimating the LOESS (and so is using LOWESS). **Using robust estimation allows the model to tolerate larger errors**. In the second case, we do not activate the robust feature. Besides, we use the decomposed components to measure the strenght of trend and seasonality in the time series. In this case, the closer Ft and Fs are to 1, the higher is the strenght.
+Thus, we can use the STL method to verify our previous results. We use two kinds of STL methods. In the first case, we activate the 'robust' feature, which uses a data-dependent weighting function that re-weights data when estimating the LOESS (and so is using LOWESS). **Using robust estimation allows the model to tolerate larger errors**. In the second case, we do not activate the robust feature. Besides, we use the decomposed components to measure the strength of trend and seasonality in the time series. In this case, the closer Ft and Fs are to 1, the higher is the strength
 
-The results from both methods show that **there is a strong seasonal component** in the data. However, the robust STL indicate that the seasonal component is not so relevant, while the non-robust STL result indicates the contrary.
+The results from both methods show that **there is a strong seasonal component** in the data. However, the robust STL indicates that the seasonal component is not so relevant, while the non-robust STL result indicates the contrary.
 
-We need to remove the trend and the seasonality to use be able to use the data to make forecasts. 
+Nonehtless, we assume that we need to remove the trend and the seasonality to be able to use the data to make forecasts. We test two methods to do that and check which of them return the more stationary time series. 
 
-We will test two methods see which of them return the more stationary time series. 
-
-First, we use differencing, i.e., compute the differences between consecutive observations. "Differencing can help stabilise the mean of a time series by removing changes in the level of a time series, and therefore eliminating (or reducing) trend and seasonality" (HYNDMAN; ATHANASOPOULOS, 2018). **After differencing the time series, the result of the ADF and the KPSS testes show that the resulting time series is still not stationary**. 
+First, we use differencing, i.e., compute the differences between consecutive observations. "Differencing can help stabilise the mean of a time series by removing changes in the level of a time series, and therefore eliminating (or reducing) trend and seasonality" (HYNDMAN; ATHANASOPOULOS, 2018). **After differencing the time series, the result of the ADF and the KPSS tests show that the resulting time series is still not stationary**. 
 
 Second, we try to remove the trend using a model fitting. "Linear trends can be summarized by a linear model, and nonlinear trends may be best summarized using a polynomial or other curve-fitting method [...] In addition to being used as a trend identification tool, these fit models can also be used to detrend a time series" (BROWNLEE, 2020). **However, after fitting the the time series, stationatity is not confirmed in the tests**. This is probably due to the seasonal component we identified earlier. 
 
-Therefore, we need to use a specific method to deal with the seasonality. **We may try first a seasonal differencing**. Then, if necessary, we can also apply the model fitting or another differencing to the deseazonalized data. **This is not necessary because the resulting deseasonalized time seris passes all tests**. Besides, we verified that the best results are achieved considering a period of 11 years for a season, instead of the 10 years we were considering before.
+Therefore, we need to use a specific method to deal with the seasonality. **We may try first a seasonal differencing**. Then, if necessary, we can also apply the model fitting or another differencing to the deseazonalized data. **This is not necessary because the resulting deseasonalized time seris passes all tests**.
 
 ----------
-
-
-
-```python
-!pip install arch
-```
-
-    Requirement already satisfied: arch in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (4.19)
-    Requirement already satisfied: statsmodels>=0.10 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from arch) (0.12.2)
-    Requirement already satisfied: cython>=0.29.14 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from arch) (0.29.21)
-    Requirement already satisfied: pandas>=0.23 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from arch) (1.1.3)
-    Requirement already satisfied: property-cached>=1.6.4 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from arch) (1.6.4)
-    Requirement already satisfied: scipy>=1.2.3 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from arch) (1.5.2)
-    Requirement already satisfied: numpy>=1.14 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from arch) (1.19.2)
-    Requirement already satisfied: patsy>=0.5 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from statsmodels>=0.10->arch) (0.5.1)
-    Requirement already satisfied: python-dateutil>=2.7.3 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from pandas>=0.23->arch) (2.8.1)
-    Requirement already satisfied: pytz>=2017.2 in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from pandas>=0.23->arch) (2020.1)
-    Requirement already satisfied: six in /Users/leuzinger/opt/anaconda3/lib/python3.8/site-packages (from patsy>=0.5->statsmodels>=0.10->arch) (1.15.0)
 
 
 
@@ -868,7 +849,7 @@ plt.show()
 
 
     
-![png](output_25_0.png)
+![png](output_24_0.png)
     
 
 
@@ -900,7 +881,7 @@ add_stl_plot(fig, res_nR, ['Robust','Non-robust'])
 
 
     
-![png](output_26_0.png)
+![png](output_25_0.png)
     
 
 
@@ -1006,7 +987,7 @@ plt.show()
 
 
     
-![png](output_30_0.png)
+![png](output_29_0.png)
     
 
 
@@ -1103,13 +1084,13 @@ plt.show()
 
 
     
-![png](output_32_0.png)
+![png](output_31_0.png)
     
 
 
 
     
-![png](output_32_1.png)
+![png](output_31_1.png)
     
 
 
@@ -1190,7 +1171,7 @@ plt.show()
 
 
     
-![png](output_34_0.png)
+![png](output_33_0.png)
     
 
 
@@ -1251,31 +1232,31 @@ print('\n',KPSS(df_des['Sunspots_des'],lags=120))
     Alternative Hypothesis: The process contains a unit root.
 
 
-###### Data modelling
+### Data modelling
 
-After removing the seasonal and the trend components of the time series, we can now try to create a model to forecast the passenger counts for the next months. **Since we have transformed our data using the differencing method, after the forecasting, we need to we need to reverse the transformation (or back-transform) to obtain forecasts on the original scale**.
+After removing the seasonal and trend components of the time series, we can now try to create a model to forecast the sunspots. **Since we have transformed our data using the differencing method, after the forecasting, we need to reverse the transformation (or back-transform) to obtain forecasts on the original scale**.
 
-First we split our dataset in training and testing sets. We will use the first 4 years as the training set and the 5th year as the testing set.
+First we split our dataset in training and testing sets.
 
-We start with a simple average forecast. In this method, "the forecasts of all future values are equal to the average (or “mean”) of the historical data" (HYNDMAN; ATHANASOPOULOS, 2018). We verify that, as the mean absolute scaled error (MASE) is greater than 1, **the average forecast actually performs worse than the naive method** and, therefore, does not adds value.
+Then, we start with a simple average forecast. In this method, "the forecasts of all future values are equal to the average (or “mean”) of the historical data" (HYNDMAN; ATHANASOPOULOS, 2018). We verify that, as the mean absolute scaled error (MASE) is greater than 1, **the average forecast actually performs worse than the naive method** and, therefore, does not adds value.
 
-We can try some ARIMA models too. First, we use an autoregressive (AR) model, where "we forecast the variable of interest using a linear combination of past values of the variable" (HYNDMAN; ATHANASOPOULOS, 2018). An AR model of order 9 is the best fit for the training data. We see that the AR(9) model performs slightly better than the average forecast, but once more the MASE is greater than 1, **so the AR model also performs worse than the naive method**.
+We also try some ARIMA models. First, we use an autoregressive (AR) model, where "we forecast the variable of interest using a linear combination of past values of the variable" (HYNDMAN; ATHANASOPOULOS, 2018). An AR model of order 9 is the best fit for the training data. We see that the AR(9) model performs slightly better than the average forecast, but once more the MASE is greater than 1, **so the AR model also performs worse than the naive method**.
 
-The next model we test is a moving average (MA) model. It "uses past forecast errors in a regression-like model" (HYNDMAN; ATHANASOPOULOS, 2018). We create an MA model by using an ARIMA model and setting the order of the AR model the differencing to zero. We verify that a MA model of order 2 is the best fit for the training data. This MA(2) model performs worse than the previous models we tested, **and, therfore, also performs worse than the naive method**, as the MASE is above 1.
+The next model we test is a moving average (MA) model. It "uses past forecast errors in a regression-like model" (HYNDMAN; ATHANASOPOULOS, 2018). We create a MA model by using an ARIMA model and setting the order of the AR model and differencing to zero. We verify that a MA model of order 2 is the best fit for the training data. However, This MA(2) model performs worse than the previous models we tested, **and, therefore, also performs worse than the naive method**, as the MASE is above 1.
 
 Finally, we can try some models the combines AR and MA. We use an ARMA model first, and then test an ARIMA model. The difference between the two is that while the ARMA model only combines autoregression and moving average models, the ARIMA model also uses differencing (HYNDMAN; ATHANASOPOULOS, 2018). We create an ARMA model by using an ARIMA model and setting the order of the differencing to zero, in an analagous way we created the MA model. 
 
-We use two criteria to evaluate the models, the AICc and the MASE. Both cirteria give suggests different orders for the ARMA model: (9,9) and (6,7). esting both models with the test set, we verify that the ARMA(6,7) performs better for all other types of erros, MAE, RMSE, and MAPE. Therefore the best ARMA model for our data have order of the autoregressive part of 6 and order of the moving average part of 7. **However, this model have a MASE of 3.76, better than the previous models tested, but worse than the naive method**.
+We use two criteria to evaluate the models, the AICc and the MASE. The cirteria suggest different orders for the ARMA model: (9,9) and (6,7). Testing both models with the test set, we verify that the ARMA(6,7) performs better for all other types of erros, MAE, RMSE, and MAPE. Therefore, the best ARMA model for our data have order of the autoregressive part of 6 and order of the moving average part of 7. **However, this model have a MASE of 3.76, better than the previous models tested, but worse than the naive method**.
 
-Regarding the ARIMA model, we can try to use the model directly with our data. We should remove the seasonal component form the data before using the ARIMA model. However, we first try using the ARIMA model directly into our data. We verify that the best ARIMA model for our data has order of the autoregressive part of 2, order of the moving average part of 0, and order of the differencing part 10. As expected, the the model does not perform well with we don't remove the seasonal component of the data. **This model have a MASE of 3.566, performing worse than than the naive method, although a little better thatn the AR, MA, and ARMA models we tried**.
+Regarding the ARIMA model, we can try to use the model directly with our data. We should remove the seasonal component from the data before using the ARIMA model. However, we first try using the ARIMA model directly into our data. We verify that the best ARIMA model for our data has order of the autoregressive part of 2, order of the moving average part of 0, and order of the differencing part 10. As expected, the the model does not perform well if we don't remove the seasonal component of the data. **This model have a MASE of 3.566, performing worse than than the naive method, although a little better than the AR, MA, and ARMA models we tried before**.
 
-Now, we use the ARIMA model with the deseasonalized data to see how it performs. We verify that the best ARIMA model for the deseasonalized time series has order of the autoregressive part of 8, order of the moving average part of 1, and order of the differencing part 10. **However, this model still does not perform well and, surprisingly, performs worse than the ARIMA models built using the time series without removing the seasonal component**. Nonetheless, it performs better than the other models previoulsy tried.
+Now, we use the ARIMA model with the deseasonalized data to see how it performs. We verify that the best ARIMA model for the deseasonalized time series has order of the autoregressive part of 8, order of the moving average part of 1, and order of the differencing part 10. **However, this model still does not perform well and, surprisingly, performs worse than the ARIMA model built using the time series without removing the seasonal component**.
 
-Therefore, we can now try the Seasonal Autoregressive Integrated Moving Average (SARIMA) method, also called Seasonal ARIMA. It is an extension of ARIMA that explicitly supports univariate time series data with a seasonal component. A seasonal ARIMA model is formed by including additional seasonal terms in the ARIMA models. It adds three new hyperparameters to specify the autoregression (AR), differencing (I) and moving average (MA) for the seasonal component of the series, as well as an additional parameter for the period of the seasonality. The modelling procedure is almost the same as for non-seasonal data, except that we need to select seasonal AR and MA terms as well as the non-seasonal components of the model.
+Finally, we can try an extension of ARIMA that explicitly supports univariate time series data with a seasonal component. A seasonal ARIMA model is formed by including additional seasonal terms in the ARIMA models. It adds three new hyperparameters to specify the autoregression (AR), differencing (I) and moving average (MA) for the seasonal component of the series, as well as an additional parameter for the period of the seasonality. The modelling procedure is almost the same as for non-seasonal data, except that we need to select seasonal AR and MA terms as well as the non-seasonal components of the model.
 
 Given the higher computing cost of the SARIMA method, we downsample the dataset from monthly to yearly samples, by taking the mean value the samples in a year as the value of this year sample. After doing this we use the SARIMA in two ways. First, we follow the procedure used for the other methods, and try to find the best parameters to be used in the model through an iteration process. **The result is a SARIMA (3,1,3)(2,1,3)11, which performed much better than the previous methods tested, with a MASE of 2.332**. 
 
-The second way we use the SARIMA method is by trying to identify the parameters to be used in the ACF and PACF plots. The best model is a SARIMA (p,q,d)(P,Q,D)s which performed better than the previous SARIMA model we tested. The significant spike in lag 6 of the PACF suggests a non-seasonal AR(6). The first lag above the significance level at lag 22 in the ACF suggests a non-seasonal MA(22). Besides, the tests we did before suggests that there is some trend, although weak, in the time series. So we adopt d as 1 to include differencing. The exponential decay in the seasonal lags of the ACF suggests a seasonal AR(1). Besides, we assume a D=1. **The result is a SARIMA(6,1,22)(1,1,0). This model performed even better than the previous SARIMA we tested, with a MASE of 2.030. Although this value is still above 1, it is clearly the bes of all the models tested**.
+The second way we use the SARIMA method is by trying to identify the parameters to be used in the ACF and PACF plots. The best model is a SARIMA (p,q,d)(P,Q,D)s which performed better than the previous SARIMA model we tested. The significant spike in lag 6 of the PACF suggests a non-seasonal AR(6). The first lag above the significance level at lag 22 in the ACF suggests a non-seasonal MA(22). Besides, the tests we did before suggests that there is some trend, although weak, in the time series. So we adopt d as 1 to include differencing. The exponential decay in the seasonal lags of the ACF suggests a seasonal AR(1). Besides, we assume a D=1. **The result is a SARIMA(6,1,22)(1,1,0). This model performed even better than the previous SARIMA we tested, with a MASE of 2.030. Although this value is still above 1, it is clearly the best of all the models tested**.
 
 ------------------------------------
 
@@ -1482,7 +1463,7 @@ plt.show()
 
 
     
-![png](output_41_0.png)
+![png](output_40_0.png)
     
 
 
@@ -1591,7 +1572,7 @@ fig = res_ar.plot_diagnostics(lags=11, fig=fig)
 
 
     
-![png](output_44_0.png)
+![png](output_43_0.png)
     
 
 
@@ -1712,7 +1693,7 @@ plt.show()
 
 
     
-![png](output_46_0.png)
+![png](output_45_0.png)
     
 
 
@@ -1960,7 +1941,7 @@ plt.show()
 
 
     
-![png](output_49_0.png)
+![png](output_48_0.png)
     
 
 
@@ -2138,7 +2119,7 @@ plt.show()
 
 
     
-![png](output_53_0.png)
+![png](output_52_0.png)
     
 
 
@@ -2323,7 +2304,7 @@ warnings.filterwarnings("ignore")
 
 
     
-![png](output_58_0.png)
+![png](output_57_0.png)
     
 
 
@@ -2481,7 +2462,7 @@ plt.show()
 
 
     
-![png](output_61_0.png)
+![png](output_60_0.png)
     
 
 
@@ -2618,7 +2599,7 @@ warnings.filterwarnings("ignore")
 
 
     
-![png](output_64_0.png)
+![png](output_63_0.png)
     
 
 
@@ -2763,7 +2744,7 @@ warnings.filterwarnings("ignore")
 
 
     
-![png](output_67_0.png)
+![png](output_66_0.png)
     
 
 
@@ -2916,7 +2897,7 @@ plt.show()
 
 
     
-![png](output_70_0.png)
+![png](output_69_0.png)
     
 
 
@@ -2989,7 +2970,7 @@ plt.show()
 
 
     
-![png](output_74_0.png)
+![png](output_73_0.png)
     
 
 
@@ -3060,7 +3041,7 @@ plt.show()
 
 
     
-![png](output_77_0.png)
+![png](output_76_0.png)
     
 
 
@@ -3088,7 +3069,7 @@ plt.show()
 
 
     
-![png](output_78_0.png)
+![png](output_77_0.png)
     
 
 
@@ -3164,7 +3145,7 @@ plt.show()
 
 
     
-![png](output_81_0.png)
+![png](output_80_0.png)
     
 
 
@@ -3192,7 +3173,7 @@ plt.show()
 
 
     
-![png](output_82_0.png)
+![png](output_81_0.png)
     
 
 
@@ -3219,13 +3200,13 @@ print('MASE=%.3f'% MASE)
 
 ## 3. Conclusion
 
-In this notebook, we were able to analyze and forecast a time series. After preparing the data, we did an intial exploratory analysis to verify if there were any seasonal or ciclic pattern in the time series. We needed to differencing our data to remove the trend component and the seasonal component. Then, we used the ADH and KPSS tests to verifiy if the resulting data series was really stationary. Next, we started constructing our forecast model. Fisrt, we split the data in training and testing data sets and used a simple average forecast. This method did not performed well, so we tested ARIMA models:
+In this notebook, we were able to analyze and forecast a time series. After preparing the data, we did an initial exploratory analysis to verify if there were any seasonal or ciclic pattern in the time series. We needed to use a differencing method on the data to remove the trend and seasonal components. Then, we used the some tests to verifiy if the resulting data series was really stationary. Next, we started constructing our forecast model. Fisrt, we split the data in training and testing data sets and used a simple average forecast. This method did not performed well, so we tested ARIMA models:
 
 1. Autoregressive model (AR)
 2. Moving average model (MA)
 3. Autoregressive moving average model (ARMA)
 4. Autoregressive integrated moving average model (ARIMA)
 
-As this models did not perform well too, we tried a seasonal ARIMA method, the SARIMA.
+As this models did not perform well too, we tried a seasonal ARIMA method, or SARIMA.
 
-We verified that none of the models SARIMA method, as expected, performed better than the previous methods. However, due to the high computing cost of the SARIMA, the method was trained and tested using a downsampled version of the dataset.
+We verified that the SARIMA model, as expected, performed better than the previous models. However, due to the high computing cost of the SARIMA, the method was trained and tested using a downsampled version of the dataset. **Given that the SARIMA model presented a MASE greater than 1, we suggest for future projects to use the SARIMA model without the downsampling, which would probably improve the model performance**. 
