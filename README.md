@@ -1,5 +1,7 @@
 This repository contains a **Model to forecast Sunspots** based on the dataset available at the [Machine Learning Mastery website](https://machinelearningmastery.com/time-series-datasets-for-machine-learning/). It's objective was the creation of a model to sunspots. This project was set up following the premises of [Reproducible Research](https://pt.coursera.org/learn/reproducible-research), so that anyone can achieve the same results as me using the steps I followed in Jupyter Notebook.
 
+**This project is part of my Final Project for the Awari's Data Scinece course**.
+
 # Project libraries
 
 
